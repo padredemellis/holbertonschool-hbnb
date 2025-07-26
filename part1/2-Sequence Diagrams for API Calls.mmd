@@ -1,0 +1,46 @@
+sequenceDiagram
+    participant Client
+    participant API as Presentation Layer (API)
+    participant AuthService as Authentication Service
+    participant ReviewService as Business Logic Layer
+    participant DB as Persistence Layer (Database)
+    
+    Client->>API: POST /api/places/{placeId}/reviews + Auth Token
+    API->>AuthService: Verify authentication token
+    AuthService->>DB: Validate token & get user ID
+    DB-->>AuthService: Authentication result
+    AuthService-->>API: Auth result (user ID or error)
+    
+    alt Authentication Failed
+        API-->>Client: 401 Unauthorized
+    else Authentication Successful
+        API->>API: Validate review input
+        
+        alt Input Invalid
+            API-->>Client: 400 Bad Request (Validation errors)
+        else Input Valid
+            API->>ReviewService: createReview(reviewData, placeId, userId)
+            ReviewService->>DB: Verify place exists
+            DB-->>ReviewService: Place existence result
+            
+            alt Place Not Found
+                ReviewService-->>API: Place not found error
+                API-->>Client: 404 Not Found
+            else Place Exists
+                ReviewService->>DB: Check if user already reviewed place
+                DB-->>ReviewService: Previous review result
+                
+                alt Already Reviewed
+                    ReviewService-->>API: Already reviewed error
+                    API-->>Client: 409 Conflict (Already reviewed)
+                else Not Previously Reviewed
+                    ReviewService->>DB: Save review data
+                    DB-->>ReviewService: Confirmation (review ID)
+                    ReviewService->>DB: Update place average rating
+                    DB-->>ReviewService: Update confirmation
+                    ReviewService-->>API: New review object
+                    API-->>Client: 201 Created (Review data)
+                end
+            end
+        end
+    end

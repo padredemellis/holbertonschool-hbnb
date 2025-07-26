@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant Client
+    participant API as Presentation Layer (API)
+    participant PlaceService as Business Logic Layer
+    participant DB as Persistence Layer (Database)
+    
+    Client->>API: GET /api/places?location=NYC&min_price=50
+    API->>API: Parse query parameters
+    API->>PlaceService: getPlaces(filters, pagination)
+    PlaceService->>DB: Query places with filters
+    DB-->>PlaceService: Place records matching criteria
+    
+    alt No Places Found
+        PlaceService-->>API: Empty result
+        API-->>Client: 200 OK (Empty array with metadata)
+    else Places Found
+        PlaceService->>DB: Get total count for pagination
+        DB-->>PlaceService: Total count
+        PlaceService-->>API: Places data with pagination info
+        API-->>Client: 200 OK (Places data with pagination)
+    end

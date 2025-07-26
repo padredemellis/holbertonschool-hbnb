@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant Client
+    participant API as Presentation Layer (API)
+    participant AuthService as Authentication Service
+    participant PlaceService as Business Logic Layer
+    participant DB as Persistence Layer (Database)
+    
+    Client->>API: POST /api/places + Auth Token (place data)
+    API->>AuthService: Verify authentication token
+    AuthService->>DB: Validate token & get user ID
+    DB-->>AuthService: Authentication result
+    AuthService-->>API: Auth result (user ID or error)
+    
+    alt Authentication Failed
+        API-->>Client: 401 Unauthorized
+    else Authentication Successful
+        API->>API: Validate place input data
+        
+        alt Input Invalid
+            API-->>Client: 400 Bad Request (Validation errors)
+        else Input Valid
+            API->>PlaceService: createPlace(placeData, userId)
+            PlaceService->>DB: Check if user exists
+            DB-->>PlaceService: User existence result
+            
+            alt User Not Found
+                PlaceService-->>API: User not found error
+                API-->>Client: 404 Not Found
+            else User Exists
+                PlaceService->>DB: Save place data
+                DB-->>PlaceService: Confirmation (place ID)
+                PlaceService-->>API: New place object
+                API-->>Client: 201 Created (Place data)
+            end
+        end
+    end

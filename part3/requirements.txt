@@ -1,0 +1,10 @@
+# Requirements for ours HBnB clone:
+flask==2.3.3
+flask-restx==1.1.0
+PyMySQL
+SQLAlchemy==2.0.20
+werkzeug==2.3.7
+requests
+flask-bcrypt==1.0.1
+flask-jwt-extended
+flask-sqlalchemy==3.0.5

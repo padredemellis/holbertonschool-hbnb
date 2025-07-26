@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant Client
+    participant API as Presentation Layer (API)
+    participant UserService as Business Logic Layer
+    participant DB as Persistence Layer (Database)
+    
+    Client->>API: POST /api/users (email, password, name)
+    API->>API: Validate input data
+    
+    alt Input Invalid
+        API-->>Client: 400 Bad Request (Validation errors)
+    else Input Valid
+        API->>UserService: createUser(userData)
+        UserService->>UserService: Hash password
+        UserService->>DB: Check if email exists
+        DB-->>UserService: Email availability result
+        
+        alt Email already exists
+            UserService-->>API: User already exists error
+            API-->>Client: 409 Conflict (Email in use)
+        else Email available
+            UserService->>DB: Save new user record
+            DB-->>UserService: Confirmation (user ID)
+            UserService-->>API: New user object
+            API-->>Client: 201 Created (User data)
+        end
+    end

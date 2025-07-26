@@ -1,0 +1,19 @@
+graph TD
+    subgraph "PresentationLayer"
+        API["API"]
+        Services["Services"]
+    end
+
+    subgraph "BusinessLogicLayer"
+        UserModel["User"]
+        PlaceModel["Place"]
+        ReviewModel["Review"]
+        AmenityModel["Amenity"]
+    end
+
+    subgraph "PersistenceLayer"
+        DB["DatabaseAccess"]
+    end
+
+    PresentationLayer -->|"Facade Pattern"| BusinessLogicLayer
+    BusinessLogicLayer --> PersistenceLayer
